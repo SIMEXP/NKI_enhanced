@@ -1,25 +1,4 @@
-function [] = nki_pipeleine_fmri_preprocess(opt);
 %%% NKI_enhanced preprocessing pipeline
-% Script to run a preprocessing pipeline analysis on the HCP database.
-%
-% SYNTAX:
-% []= NKI_PIPELEINE_FMRI_PREPROCESS(OPT);
-%
-% _________________________________________________________________________
-% INPUTS:
-%
-% OPT
-%   (structure, optional) with the following fields :
-%
-%   TASK
-%       (string, default 'checkerBoard') type of tasks that would be preprocessed. 
-%        Possibles tasks are: 'checkerBoard','breathHold','rest'.
-%
-%   EXP
-%       (string, default 'TR1400') TR used for the experiment.
-%       Possibles experiment : 'TR1400', 'TR645'
-%
-% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Yassine Benhajali
 % Research Centre of the Montreal Geriatric Institute
 % & Department of Computer Science and Operations Research
@@ -49,16 +28,8 @@ clear all
 %%%%%%%%%%%%%%%%%%%%%
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%
-list_fields   = { 'task'        , 'exp'    };
-list_defaults = { 'checkerBoard', 'TR1400' };
-if nargin > 1
-    opt = psom_struct_defaults(opt,list_fields,list_defaults);
-else
-    opt = psom_struct_defaults(struct(),list_fields,list_defaults);
-end
-
-task  = opt.task;
-exp   = opt.exp;
+task  = 'checkerBoard';
+exp   = 'exp1';
 
 %% Setting input/output files 
 [status,cmdout] = system ('uname -n');
@@ -85,11 +56,8 @@ else
     end
 end
 
-% path_raw = '/media/database3/nki_enhanced/raw_mnc/';
-path_raw = [root_path 'raw_mnc/';
-path_preproc = '/home/bellecp1/database/nki_enhanced/fmri_preprocess/';
-
 %% Grab the raw data
+path_raw = [root_path 'raw_mnc/'];
 list_subject = dir(path_raw);
 list_subject = {list_subject.name};
 list_subject = list_subject(~ismember(list_subject,{'.','..'}));
@@ -98,9 +66,9 @@ for num_s = 1:length(list_subject)
     subject = list_subject{num_s};
     id = ['X' subject];
     files_in.(id).anat = [path_raw subject filesep 'anat' filesep 'mprage.mnc.gz'];
-    files_in.(id).fmri.sess1.std2500 = [path_raw subject filesep 'session_1' filesep 'RfMRI_std_2500' filesep 'rest.mnc.gz'];
-    files_in.(id).fmri.sess1.mx1400 = [path_raw subject filesep 'session_1' filesep 'RfMRI_mx_1400' filesep 'rest.mnc.gz'];
-    files_in.(id).fmri.sess1.mx645 = [path_raw subject filesep 'session_1' filesep 'RfMRI_mx_645' filesep 'rest.mnc.gz'];    
+    files_in.(id).fmri.sess1.breathHold1400 = [path_raw subject filesep 'TfMRI_breathHold_1400' filesep 'func.mnc.gz'];
+    files_in.(id).fmri.sess1.checBoard1400 = [path_raw subject filesep 'TfMRI_visualCheckerboard_1400' filesep 'func.mnc.gz'];
+    files_in.(id).fmri.sess1.checBoard645 = [path_raw subject filesep 'TfMRI_visualCheckerboard_645' filesep 'func.mnc.gz'];    
     
     files_c = psom_files2cell(files_in.(id));
     for num_f = 1:length(files_c)
@@ -111,29 +79,24 @@ for num_s = 1:length(list_subject)
         end        
     end
 end
-    
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0103714/session_1/RfMRI_std_2500/rest.mnc.gz does not exist, I suppressed subject 0103714
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0120538/session_1/RfMRI_std_2500/rest.mnc.gz does not exist, I suppressed subject 0120538
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0120652/session_1/RfMRI_std_2500/rest.mnc.gz does not exist, I suppressed subject 0120652
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0121498/anat/mprage.mnc.gz does not exist, I suppressed subject 0121498
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0123657/session_1/RfMRI_mx_1400/rest.mnc.gz does not exist, I suppressed subject 0123657
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0136018/session_1/RfMRI_std_2500/rest.mnc.gz does not exist, I suppressed subject 0136018
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0141473/session_1/RfMRI_std_2500/rest.mnc.gz does not exist, I suppressed subject 0141473
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0144344/anat/mprage.mnc.gz does not exist, I suppressed subject 0144344
-%warning: The file /media/database3/nki_enhanced/raw_mnc/0144495/session_1/RfMRI_std_2500/rest.mnc.gz does not exist, I suppressed subject 0144495
-%warning: The file /media/database4/nki_enhanced/raw_mnc/0182604/session_1/RfMRI_mx_645/rest.mnc.gz does not exist, I suppressed subject 0182604
+
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0103714/TfMRI_breathHold_1400/func.mnc.gz does not exist, I suppressed subject 0103714
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0118439/TfMRI_breathHold_1400/func.mnc.gz does not exist, I suppressed subject 0118439
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0120538/TfMRI_breathHold_1400/func.mnc.gz does not exist, I suppressed subject 0120538
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0120652/TfMRI_breathHold_1400/func.mnc.gz does not exist, I suppressed subject 0120652
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0121498/anat/mprage.mnc.gz does not exist, I suppressed subject 0121498
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0141473/TfMRI_breathHold_1400/func.mnc.gz does not exist, I suppressed subject 0141473
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0144344/anat/mprage.mnc.gz does not exist, I suppressed subject 0144344
+%  warning: The file /media/database4/nki_enhanced/raw_mnc/0148071/TfMRI_breathHold_1400/func.mnc.gz does not exist, I suppressed subject 0148071
+
 
 %% Pipeline options  %%
 %% General
 opt.folder_out  = [root_path 'fmri_preprocess_' upper(task) '_' exp];    % Where to store the results
 opt.size_output = 'quality_control';                             % The amount of outputs that are generated by the pipeline. 'all' will keep intermediate outputs, 'quality_control' will only keep the quality control outputs.
 
-%% General
-opt.folder_out  = path_preproc;    % Where to store the results
-opt.size_output = 'quality_control';                             % The amount of outputs that are generated by the pipeline. 'all' will keep intermediate outputs, 'quality_control' will only keep the quality control outputs. 
-
 %% Pipeline manager 
-opt.psom.qsub_options = '-q qwork@ms -l nodes=1:m32G,walltime=05:00:00';
+%  opt.psom.qsub_options = '-q qwork@ms -l nodes=1:m32G,walltime=05:00:00';
 
 %% Slice timing correction (niak_brick_slice_timing)
 opt.slice_timing.type_acquisition = 'interleaved ascending'; % Slice timing order (available options : 'sequential ascending', 'sequential descending', 'interleaved ascending', 'interleaved descending')
@@ -178,9 +141,9 @@ opt.smooth_vol.flag_skip = 0;  % Skip spatial smoothing (0: don't skip, 1 : skip
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Tune the parameters for specific subjects %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-opt.tune(1).subject = 'X0109819';
-opt.tune(1).param.slice_timing = opt.slice_timing;
-opt.tune(1).param.slice_timing.flag_center = true;
+%  opt.tune(1).subject = 'X0109819';
+%  opt.tune(1).param.slice_timing = opt.slice_timing;
+%  opt.tune(1).param.slice_timing.flag_center = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
