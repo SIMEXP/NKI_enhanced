@@ -28,8 +28,8 @@ clear all
 %%%%%%%%%%%%%%%%%%%%%
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%
-task  = 'checkerBoard';
-exp   = 'exp1';
+task  = 'all';
+exp   = 'task';
 
 %% Setting input/output files 
 [status,cmdout] = system ('uname -n');
