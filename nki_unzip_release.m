@@ -2,7 +2,7 @@
 
 %set pth in and out
 root_path = '/media/database4/nki_enhanced/';
-path_out  = '/media/scratch2/NKI_enhanced/raw_mnc_all/';
+path_out  = '/media/scratch2/NKI_enhanced/raw_nii_all/';
 % grab a specofic set of release
 nb_release = 0;
 list_release_raw = dir([root_path 'release*' ]);
@@ -25,5 +25,9 @@ for num_a = 1:length(list_release)
         fprintf('Unpacking archive number %i from %i \n',num_g,length(list_archive))
         system(command1);
         cammand2 = sprintf('scp -rv  %s/group_*/* %s.',path_tmp,path_out)
+        system(command2);
     end
 end
+% convert all to mnc
+opt.flag_zip = true;
+niak_brick_nii2mnc(path_out,'/media/scratch2/NKI_enhanced/raw_mnc_all/');
