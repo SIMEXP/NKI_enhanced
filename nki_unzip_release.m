@@ -30,4 +30,4 @@ for num_a = 1:length(list_release)
 end
 % convert all to mnc
 opt.flag_zip = true;
-niak_brick_nii2mnc(path_out,'/media/scratch2/NKI_enhanced/raw_mnc_all/');
+niak_brick_nii2mnc(path_out,'/media/scratch2/NKI_enhanced/raw_mnc_all/',opt);
