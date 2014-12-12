@@ -24,9 +24,9 @@ for num_a = 1:length(list_release)
         command1 = sprintf('tar -xvf %s%s  -C %s/. ',path_release,list_archive(num_g).name,path_tmp);
         fprintf('Unpacking archive number %i from %i \n',num_g,length(list_archive))
         system(command1);
-        command2 = sprintf('scp -rv  %s/group_*/* %s.',path_tmp,path_out)
-        system(command2);
     end
+     command2 = sprintf('scp -rv  %s/group_*/* %s.',path_tmp,path_out)
+     system(command2);
 end
 % convert all to mnc
 opt.flag_zip = true;
