@@ -1,7 +1,7 @@
 % copy unprocessed HCP task data from connectome in box hard drives to a remote server 
  
 path_data = '/media/scratch2/NKI_enhanced/raw_mnc_all/';
-path_out  = '/sb/project/gsf-624-aa/database/nki_enhanced/raw_task/';
+path_out  = '/sb/project/gsf-624-aa/database/NKI_enhanced/raw_task/';
 server    = 'guillimin';
 user_name = 'yassinebha';
 
