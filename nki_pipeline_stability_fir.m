@@ -130,7 +130,7 @@ opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the 
 
 %%Temporary grabber for debugging
 liste_exclude = dir ([root_path 'fmri_preprocess_ALL_task/anat']);
-liste_exclude = liste_exclude(23:end -1);
+liste_exclude = liste_exclude(43:end -1);
 liste_exclude = {liste_exclude.name};
 opt_g.exclude_subject = liste_exclude;
 
@@ -174,8 +174,8 @@ opt.name_condition = lower(task);
 opt.name_baseline = 'baseline';
 opt.fir.type_norm     = 'fir';       % The type of normalization of the FIR.
 opt.fir.time_window   = opt.model.trial_duration;        % The size (in sec) of the time window to evaluate the response
-opt.fir.max_interpolation = 7.2;    % --> max 10 vols consécutifs manquants (TR = 0.72s), sinon bloc rejeté, mais ça devrait être irrelevant comme pas de scrubbing ici
-opt.fir.time_sampling = 0.72;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
+opt.fir.max_interpolation = (str2num(exp)/1000)*5;    % --> max 5 vols consécutifs manquants, sinon bloc rejeté, mais ça devrait être irrelevant comme pas de scrubbing ici
+opt.fir.time_sampling = str2num(exp)/1000;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
 opt.fir.nb_min_baseline = 1 ;
 
 %% FDR estimation
