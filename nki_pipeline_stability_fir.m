@@ -11,11 +11,15 @@ function [] = nki_pipeline_stability_fir(opt)
 %   (structure, optional) with the following fields :
 %
 %   TASK
-%       (string, default 'visualCheckerboard') type of tasks that would be extracted. Possibles tasks are: 'visualCheckerboard',
-%       'BreathHold'.
+%       (string, default 'checkerboard') type of tasks that would be extracted. Possibles tasks are: 'checkerboard',
+%       'breathhold'.
 %
-%   TR
+%   EXP
 %       (string, default '1400') type of TR used. Possibles TR : '1400', '645'
+%
+%   MODEL
+%       (structure) see the OPT argument of  NKI_MODEL_<TASK-NAME>. 
+%       The default parameters may work.
 %
 %
 % _________________________________________________________________________
@@ -53,28 +57,28 @@ function [] = nki_pipeline_stability_fir(opt)
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%
 %% set experimentent
-list_fields   = { 'task' , 'tr' };
-list_defaults = { 'visualCheckerboard', '1400' };
+list_fields   = { 'task'         , 'exp'  , 'model'  };
+list_defaults = { 'checkerboard' , '1400' , struct() };
 if ischar (opt.task ) &&  ischar(opt.exp)
    opt.task = upper(opt.task);
-   if ismember(opt.task,{'visualCheckerboard','BreathHold'}) && ismember(opt.tr,{'1400','645'})
+   if ismember(opt.task,{'checkerboard','breathhold'}) && ismember(opt.exp,{'1400','645'})
       opt = psom_struct_defaults(opt,list_fields,list_defaults);
    else
-      error('wrong task or TR , see help nki_pipeline_stability_fir')
+      error('wrong task or TR/EXP , see help nki_pipeline_stability_fir')
    end
 else 
    error ( 'you must specify the task and the TR')
 end
 
 task  = opt.task;
-tr   = opt.tr;
-fprintf ('script to run nki_stability_fir pipeline \n Task: %s \n TR: %s\n ',task,tr)
+exp   = opt.exp;
+fprintf ('script to run nki_stability_fir pipeline \n Task: %s \n TR: %s\n ',task,exp)
 
 %% Setting input/output files 
 [status,cmdout] = system ('uname -n');
 server          = strtrim(cmdout);
 if strfind(server,'lg-1r') % This is guillimin
-    root_path = '/gs/scratch/yassinebha//';
+    root_path = '/gs/scratch/yassinebha/NKI_enhanced/';
     fprintf ('server: %s (Guillimin) \n ',server)
     my_user_name = getenv('USER');
 elseif strfind(server,'ip05') % this is mammouth
@@ -97,8 +101,25 @@ end
 
 %% create the csv model files
 opt_model.task = task;
-opt_model.tr  = tr;
-eval([ 'nki_model_' lower(opt_model.task) '_csv(root_path,opt_model)']);
+opt_model.exp  = exp;
+
+if ~isempty(opt.model.trial_delay)
+   opt_model.trial_delay = opt.model.trial_delay;
+end
+if ~isempty(opt.model.trial_duration)
+   opt_model.trial_duration = opt.model.trial_duration;
+end
+if ~isempty(opt.model.baseline_delay)
+   opt_model.baseline_delay = opt.model.baseline_delay;
+end
+if ~isempty(opt.model.baseline_duration)
+   opt_model.baseline_duration = opt.model.baseline_duration;
+end
+
+
+mkdir([root_path 'fmri_preprocess_ALL_task/'],'onset');
+path_folder = [ root_path 'fmri_preprocess_ALL_task/onset/'];
+eval([ 'nki_model_' lower(task) '(path_folder,opt_model)']);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Grabbing the results from the NIAK fMRI preprocessing pipeline
@@ -109,18 +130,16 @@ opt_g.min_xcorr_anat = 0.5; % The minimum xcorr score for an fMRI dataset to be 
 opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the STABILITY_FIR pipeline
 
 %%Temporary grabber for debugging
-%liste_exclude = dir ([root_path 'fmri_preprocess_' upper(task) '_' exp '/anat']);
-%liste_exclude = liste_exclude(23:end -1);
-%liste_exclude = {liste_exclude.name};
-%opt_g.exclude_subject = liste_exclude;
-opt_g.exclude_subject ={'HCP168139'}; % to be investigated later , it make the pipelne crash, strange artifact in functional images
+liste_exclude = dir ([root_path 'fmri_preprocess_ALL_task/anat']);
+liste_exclude = liste_exclude(23:end -1);
+liste_exclude = {liste_exclude.name};
+opt_g.exclude_subject = liste_exclude;
 files_in = niak_grab_fmri_preprocess([root_path 'fmri_preprocess_' upper(task) '_' exp],opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 
 %% Event times
 data.covariates_group_subs = fieldnames(files_in.fmri);
 for list = 1:length(data.covariates_group_subs)    
-    files_in.timing.(data.covariates_group_subs{list}).session1.([lower(task)(1:2) 'RL']) = [root_path 'fmri_preprocess_' upper(task) '_' exp '/EVs/hcp_model_intrarunRL.csv'];
-    files_in.timing.(data.covariates_group_subs{list}).session1.([lower(task)(1:2) 'LR']) = [root_path 'fmri_preprocess_' upper(task) '_' exp '/EVs/hcp_model_intrarunLR.csv'];
+    files_in.timing.(data.covariates_group_subs{list}).session1.(lower(task)) = [root_path 'fmri_preprocess_ALL_task/onset/nki_model_intrarun_' lower(opt.task) '.csv'];
 end
 
 
@@ -139,10 +158,10 @@ opt.stability_group.nb_samps = 500;  % Number of bootstrap samples at the group 
 opt.nb_min_fir = 1;    % the minimum response windows number. By defaut is set to 1
 opt.stability_group.min_subject = 2; % (integer, default 3) the minimal number of subjects to start the group-level stability analysis. An error message will be issued if this number is not reached.
 %% FIR estimation 
-opt.name_condition = 'rh';
+opt.name_condition = task;
 opt.name_baseline = 'baseline';
 opt.fir.type_norm     = 'fir';       % The type of normalization of the FIR.
-opt.fir.time_window   = 16.5;        % The size (in sec) of the time window to evaluate the response
+opt.fir.time_window   = opt.model.trial_duration;        % The size (in sec) of the time window to evaluate the response
 opt.fir.max_interpolation = 7.2;    % --> max 10 vols consécutifs manquants (TR = 0.72s), sinon bloc rejeté, mais ça devrait être irrelevant comme pas de scrubbing ici
 opt.fir.time_sampling = 0.72;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
 opt.fir.nb_min_baseline = 1 ;
