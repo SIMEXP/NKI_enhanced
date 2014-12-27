@@ -133,14 +133,27 @@ liste_exclude = dir ([root_path 'fmri_preprocess_ALL_task/anat']);
 liste_exclude = liste_exclude(23:end -1);
 liste_exclude = {liste_exclude.name};
 opt_g.exclude_subject = liste_exclude;
-files_in = niak_grab_fmri_preprocess([root_path 'fmri_preprocess_' upper(task) '_' exp],opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 
-%% Event times
-data.covariates_group_subs = fieldnames(files_in.fmri);
-for list = 1:length(data.covariates_group_subs)    
-    files_in.timing.(data.covariates_group_subs{list}).session1.(lower(task)) = [root_path 'fmri_preprocess_ALL_task/onset/nki_model_intrarun_' lower(opt.task) '.csv'];
+
+switch lower(task)
+      case 'checkerboard'
+      opt_g.filter.run = {['checBoard' exp]};
+      files_in = niak_grab_fmri_preprocess([root_path 'fmri_preprocess_ALL_task/'],opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+      %% Event times
+      data.covariates_group_subs = fieldnames(files_in.fmri);
+      for list = 1:length(data.covariates_group_subs)    
+          files_in.timing.(data.covariates_group_subs{list}).sess1.(['checBoard' exp]) = [root_path 'fmri_preprocess_ALL_task/onset/nki_model_intrarun_' lower(opt.task) '.csv'];
+      end
+
+      case 'breathhold'
+      opt_g.filter.run = {['breathHold' exp]};
+      files_in = niak_grab_fmri_preprocess([root_path 'fmri_preprocess_ALL_task/'],opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+      %% Event times
+      data.covariates_group_subs = fieldnames(files_in.fmri);
+      for list = 1:length(data.covariates_group_subs)    
+          files_in.timing.(data.covariates_group_subs{list}).sess1.(['breathHold' exp]) = [root_path 'fmri_preprocess_ALL_task/onset/nki_model_intrarun_' lower(opt.task) '.csv'];
+      end
 end
-
 
 %%%%%%%%%%%%%
 %% Options %%
