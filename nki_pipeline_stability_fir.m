@@ -147,7 +147,7 @@ end
 %%%%%%%%%%%%%
 
 %% BASC
-opt.folder_out = [ root_path '/stability_fir_perc_' upper(task) trial '_' exp ]; % Where to store the results
+opt.folder_out = [ root_path '/stability_fir_perc_' lower(task) '_' exp ]; % Where to store the results
 opt.grid_scales = [5:5:50 60:10:200 220:20:400 500:100:900]; % Search in the range 2-900 clusters
 opt.scales_maps = [ 10   7   7 ; 
                     80  80  83]; % Usually, this is initially left empty. After the pipeline ran a first time, the results of the MSTEPS procedure are used to select the final scales
@@ -157,7 +157,7 @@ opt.stability_group.nb_samps = 500;  % Number of bootstrap samples at the group 
 opt.nb_min_fir = 1;    % the minimum response windows number. By defaut is set to 1
 opt.stability_group.min_subject = 2; % (integer, default 3) the minimal number of subjects to start the group-level stability analysis. An error message will be issued if this number is not reached.
 %% FIR estimation 
-opt.name_condition = task;
+opt.name_condition = lower(task);
 opt.name_baseline = 'baseline';
 opt.fir.type_norm     = 'fir';       % The type of normalization of the FIR.
 opt.fir.time_window   = opt.model.trial_duration;        % The size (in sec) of the time window to evaluate the response
