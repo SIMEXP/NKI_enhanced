@@ -1,0 +1,23 @@
+Breath Hold Paradigm:
+
+TASK_SEQUENCE = ( R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6,
+                  R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6,
+                  R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6,
+                  R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6,
+                  R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6,
+                  R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6,
+                  R, G, In, Out, Deep, H1, H2, H3, H4, H5, H6 )
+TASK_TIMING =   (10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3,
+                 10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3,
+                 10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3,
+                 10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3,
+                 10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3,
+                 10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3,
+                 10, 2,  2,   2,    2,  3,  3,  3,  3,  3,  3 )
+                 
+KEY:      R="Rest"
+          G="Get Ready"
+          In="Breathe In"
+          Out="Breathe Out"
+          Deep="Deep Breath and Hold"
+          H1-H6= Circles of descreasing size, indicating how much longer breath needed to be held.
