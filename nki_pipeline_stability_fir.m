@@ -129,10 +129,10 @@ opt_g.min_xcorr_anat = 0.5; % The minimum xcorr score for an fMRI dataset to be 
 opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the STABILITY_FIR pipeline
 
 %%Temporary grabber for debugging
-liste_exclude = dir ([root_path 'fmri_preprocess_ALL_task/anat']);
-liste_exclude = liste_exclude(43:end -1);
-liste_exclude = {liste_exclude.name};
-opt_g.exclude_subject = liste_exclude;
+%liste_exclude = dir ([root_path 'fmri_preprocess_ALL_task/anat']);
+%liste_exclude = liste_exclude(43:end -1);
+%liste_exclude = {liste_exclude.name};
+%opt_g.exclude_subject = liste_exclude;
 
 
 switch lower(task)
@@ -162,8 +162,7 @@ end
 %% BASC
 opt.folder_out = [ root_path '/stability_fir_perc_' lower(task) '_' exp ]; % Where to store the results
 opt.grid_scales = [5:5:50 60:10:200 220:20:400 500:100:900]; % Search in the range 2-900 clusters
-opt.scales_maps = [ 10   7   7 ; 
-                    80  80  83]; % Usually, this is initially left empty. After the pipeline ran a first time, the results of the MSTEPS procedure are used to select the final scales
+opt.scales_maps = []; % Usually, this is initially left empty. After the pipeline ran a first time, the results of the MSTEPS procedure are used to select the final scales
 opt.stability_fir.nb_samps = 100;    % Number of bootstrap samples at the individual level. 100: the CI on indidividual stability is +/-0.1
 opt.stability_fir.std_noise = 0;     % The standard deviation of the judo noise. The value 0 will not use judo noise. 
 opt.stability_group.nb_samps = 500;  % Number of bootstrap samples at the group level. 500: the CI on group stability is +/-0.05
@@ -190,7 +189,7 @@ opt.flag_group = true;  % Generate maps/FIR at the group level
 %% Run the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%
 opt.flag_test = false; % Put this flag to true to just generate the pipeline without running it. Otherwise the pipeline will start.
-%  opt.psom.qsub_options = '-q sw -l nodes=1:ppn=4,walltime=05:00:00';
+opt.psom.qsub_options = '-q sw -l nodes=1:ppn=4,walltime=05:00:00';
 pipeline = niak_pipeline_stability_fir(files_in,opt);
 
 %%extra
