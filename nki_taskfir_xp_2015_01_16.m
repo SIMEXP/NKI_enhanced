@@ -8,13 +8,26 @@ list_scale = { 'sci180_scg162_scf159' ; ...
 task = 'checkerboard' ;
 tr = {'645'};
 
+%% Load phenotypes
+pheno = niak_read_csv_cell([path_root 'nki-rs_lite_r1-2-3-4-5_phenotypic_v1.csv']);
+lx = pheno(2:end,1);
+ly = pheno(1,2:end)';
+pheno = pheno(2:end,2:end);
+
 %% Load data
 for tt = 1:length(tr)
     path_read  = [path_root 'stability_fir_perc_' task '_' tr{tt} '/stability_group/fir/'];
     path_fmri  = [path_root 'fmri_preprocess_ALL_task/fmri/'];
     list_files = dir([path_read 'fir_group_level_*']);
     list_files = {list_files.name};
+    pheno_r = cell(length(list_files),size(pheno,2));
     for ff = 1:length(list_files);
+        subject = list_files{ff}(end-10:end-4);
+        ind_s = find(ismember(lx,subject));
+        if isempty(ind_s)
+            error('Could not find subject %s',subject)
+        end
+        pheno_r(ff,:) = pheno(ind_s,:);
         data = load([path_read list_files{ff}],list_scale{tt});
         fir_all{tt}(:,:,ff) = data.(list_scale{tt}).fir_mean;
     end
