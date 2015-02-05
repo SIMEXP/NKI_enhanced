@@ -42,7 +42,7 @@ end
 
 %% More parameters    0104892
 %list_ind = [ 19 , 33 ];
-list_ind = [ 36, 100 ];
+list_ind = [ 113 ];
 list_color = {'r','b','g','k','p'};
 clf
 
@@ -53,10 +53,15 @@ for tt = 1:length(tr)
     for ii = 1:length(list_ind)
         % Clustering of subtypes
         figure(hc)
-        D = niak_build_distance (squeeze(fir_all{tt}(:,list_ind(ii),:)));
+        fir_td = squeeze(fir_all{tt}(:,list_ind(ii),:));
+        fir_td = fir_td./repmat(sqrt(sum(fir_td.^2,1)),[size(fir_td,1) 1]);
+        fir_tf(isnan(fir_td)) = 0;
+        D = niak_build_distance (fir_td);
         hier = niak_hierarchical_clustering (-D);
-        sil = niak_build_avg_silhouette(-D,hier);
-        [val,nb_clust(tt)] = max(sil(1:50));
+        %sil = niak_build_avg_silhouette(-D,hier);
+        %[val,nb_clust(tt)] = max(sil(1:50));
+        val = NaN;
+        nb_clust(tt) = 5;
         fprintf('Task %s, max silhouette %1.2f at scale %i\n',tr{tt},val,nb_clust(tt))
         part = niak_threshold_hierarchy (hier,struct('thresh',nb_clust(tt)));
         order = niak_hier2order (hier);
