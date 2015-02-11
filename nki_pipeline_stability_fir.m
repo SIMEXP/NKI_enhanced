@@ -21,6 +21,11 @@ function [] = nki_pipeline_stability_fir(opt)
 %       (structure) see the OPT argument of  NKI_MODEL_<TASK-NAME>. 
 %       The default parameters may work.
 %
+%   TYPE_NORM
+%       (string, default 'fir') type of fir estimate normalisation. Possibles types are: 'fir',
+%       'fir_shape'. see niak_normalize_fir for explanation
+%
+%
 %
 % _________________________________________________________________________
 %
@@ -57,8 +62,8 @@ function [] = nki_pipeline_stability_fir(opt)
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%
 %% set experimentent
-list_fields   = { 'task'         , 'exp'  , 'model'  };
-list_defaults = { 'checkerboard' , '1400' , struct() };
+list_fields   = { 'task'         , 'exp'  , 'model' ,'type_norm' };
+list_defaults = { 'checkerboard' , '1400' , struct(),'fir'       };
 if ischar (opt.task ) &&  ischar(opt.exp)
    if ismember(opt.task,{'checkerboard','breathhold'}) && ismember(opt.exp,{'1400','645'})
       opt = psom_struct_defaults(opt,list_fields,list_defaults);
@@ -71,7 +76,14 @@ end
 
 task  = opt.task;
 exp   = opt.exp;
-fprintf ('script to run nki_stability_fir pipeline \n Task: %s \n TR: %s\n ',task,exp)
+if ismember(opt.type_norm,{'fir'})
+   type_norm = 'perc';
+elseif ismember(opt.type_norm,{'fir_shape'})
+   type_norm = 'shape';
+else
+   error('wrong normalisation type')
+end
+fprintf ('script to run nki_stability_fir pipeline \n Task: %s \n TR: %s\n normalisation: fir %s\n ',task,exp,type_norm)
 
 %% Setting input/output files 
 [status,cmdout] = system ('uname -n');
@@ -160,7 +172,7 @@ end
 %%%%%%%%%%%%%
 
 %% BASC
-opt.folder_out = [ root_path '/stability_fir_perc_' lower(task) '_' exp ]; % Where to store the results
+opt.folder_out = [ root_path '/stability_fir_' type_norm  '_' lower(task) '_' exp ]; % Where to store the results
 opt.grid_scales = [5:5:50 60:10:200 220:20:400 500:100:900]; % Search in the range 2-900 clusters
 % use mstep sacle if exist or leave it empty
 mstep_file = [ opt.folder_out filesep 'stability_group/msteps_group.mat'];
@@ -180,7 +192,7 @@ opt.stability_group.min_subject = 2; % (integer, default 3) the minimal number o
 %% FIR estimation 
 opt.name_condition = lower(task);
 opt.name_baseline = 'baseline';
-opt.fir.type_norm     = 'fir';       % The type of normalization of the FIR.
+opt.fir.type_norm     = opt.type_norm;       % The type of normalization of the FIR.
 opt.fir.time_window   = opt.model.trial_duration;        % The size (in sec) of the time window to evaluate the response
 opt.fir.max_interpolation = (str2num(exp)/1000)*5;    % --> max 5 vols consécutifs manquants, sinon bloc rejeté, mais ça devrait être irrelevant comme pas de scrubbing ici
 opt.fir.time_sampling = str2num(exp)/1000;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
