@@ -17,6 +17,9 @@ function [] = nki_pipeline_stability_fir(opt)
 %   EXP
 %       (string, default '1400') type of TR used. Possibles TR : '1400', '645'
 %
+%   TST
+%       (string, default '') type of test used. Warning: put the prefix "_" before the test name (ex: "_noscrub")
+%
 %   MODEL
 %       (structure) see the OPT argument of  NKI_MODEL_<TASK-NAME>. 
 %       The default parameters may work.
@@ -62,8 +65,8 @@ function [] = nki_pipeline_stability_fir(opt)
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%
 %% set experimentent
-list_fields   = { 'task'         , 'exp'  , 'model' ,'type_norm' };
-list_defaults = { 'checkerboard' , '1400' , struct(),'fir'       };
+list_fields   = { 'task'         , 'exp'  , 'model' ,'type_norm' ,'tst'};
+list_defaults = { 'checkerboard' , '1400' , struct(),'fir'       ,''    };
 if ischar (opt.task ) &&  ischar(opt.exp)
    if ismember(opt.task,{'checkerboard','breathhold'}) && ismember(opt.exp,{'1400','645'})
       opt = psom_struct_defaults(opt,list_fields,list_defaults);
@@ -76,6 +79,7 @@ end
 
 task  = opt.task;
 exp   = opt.exp;
+tst   = opt.tst
 if ismember(opt.type_norm,{'fir'})
    type_norm = 'perc';
 elseif ismember(opt.type_norm,{'fir_shape'})
@@ -127,9 +131,10 @@ if ~isempty(opt.model.baseline_duration)
    opt_model.baseline_duration = opt.model.baseline_duration;
 end
 
+fmri_path = [root_path 'fmri_preprocess_ALL_task' tst '/'];
 
-mkdir([root_path 'fmri_preprocess_ALL_task/'],'onset');
-path_folder = [ root_path 'fmri_preprocess_ALL_task/onset/'];
+mkdir([root_path fmri_path],'onset');
+path_folder = [ fmri_path 'onset/'];
 eval([ 'nki_model_' lower(task) '(path_folder,opt_model)']);
 
 %%%%%%%%%%%%%%%%%%%%
@@ -141,7 +146,7 @@ opt_g.min_xcorr_anat = 0.5; % The minimum xcorr score for an fMRI dataset to be 
 opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the STABILITY_FIR pipeline
 
 %%Temporary grabber for debugging
-%liste_exclude = dir ([root_path 'fmri_preprocess_ALL_task/anat']);
+%liste_exclude = dir ([fmri_path 'anat']);
 %liste_exclude = liste_exclude(43:end -1);
 %liste_exclude = {liste_exclude.name};
 %opt_g.exclude_subject = liste_exclude;
@@ -150,20 +155,20 @@ opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the 
 switch lower(task)
       case 'checkerboard'
       opt_g.filter.run = {['checBoard' exp]};
-      files_in = niak_grab_fmri_preprocess([root_path 'fmri_preprocess_ALL_task/'],opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+      files_in = niak_grab_fmri_preprocess(fmri_path,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
       %% Event times
       data.covariates_group_subs = fieldnames(files_in.fmri);
       for list = 1:length(data.covariates_group_subs)    
-          files_in.timing.(data.covariates_group_subs{list}).sess1.(['checBoard' exp]) = [root_path 'fmri_preprocess_ALL_task/onset/nki_model_intrarun_' lower(opt.task) '.csv'];
+          files_in.timing.(data.covariates_group_subs{list}).sess1.(['checBoard' exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '.csv'];
       end
 
       case 'breathhold'
       opt_g.filter.run = {['breathHold' exp]};
-      files_in = niak_grab_fmri_preprocess([root_path 'fmri_preprocess_ALL_task/'],opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+      files_in = niak_grab_fmri_preprocess(fmri_path,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
       %% Event times
       data.covariates_group_subs = fieldnames(files_in.fmri);
       for list = 1:length(data.covariates_group_subs)    
-          files_in.timing.(data.covariates_group_subs{list}).sess1.(['breathHold' exp]) = [root_path 'fmri_preprocess_ALL_task/onset/nki_model_intrarun_' lower(opt.task) '.csv'];
+          files_in.timing.(data.covariates_group_subs{list}).sess1.(['breathHold' exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '.csv'];
       end
 end
 
