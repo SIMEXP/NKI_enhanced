@@ -16,7 +16,6 @@ function [] = nki_model_checkerboard(path_folder,opt)
 %   TRIAL_DURATION (numeric, default '16.5') time for each trial to estimate FIR responses.
 %   BASELINE_DELAY (numeric, default '2.5') time delay before each trial's baseline estimate.
 %   BASELINE_DURATION (numeric, default '4') time for each trial to estimate baselie for FIR responses.
-%   EXP (string, default '1400') type of TR used. Possible value '1400', '645'.
 
 %%%%%%%%%%%%%%%%%%%%%
 %% Parameters
