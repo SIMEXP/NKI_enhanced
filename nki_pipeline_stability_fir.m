@@ -133,7 +133,7 @@ end
 
 fmri_path = [root_path 'fmri_preprocess_ALL_task' tst '/'];
 
-mkdir([root_path fmri_path],'onset');
+mkdir(fmri_path,'onset');
 path_folder = [ fmri_path 'onset/'];
 eval([ 'nki_model_' lower(task) '(path_folder,opt_model)']);
 
