@@ -3,11 +3,12 @@ clear
 %% Parameters
 %stability_fir_perc_MOTORrh_hcp/stability_group/fir';
 path_root =  '/media/database10/nki_enhanced/';
-list_scale = { 'sci180_scg162_scf159' ; ...
-             };
+list_scale = { 'sci180_scg162_scf159'};
+%list_scale = { 'sci150_scg135_scf134'};
 task = 'checkerboard' ;
 tr = {'645'};
-
+fir = 'fir_perc';
+scrub = ''
 %% Load phenotypes
 pheno = niak_read_csv_cell([path_root 'nki-rs_lite_r1-2-3-4-5_phenotypic_v1.csv']);
 lx = pheno(2:end,1);
@@ -16,7 +17,7 @@ pheno = pheno(2:end,2:end);
 
 %% Load data
 for tt = 1:length(tr)
-    path_read  = [path_root 'stability_fir_perc_' task '_' tr{tt} '/stability_group/fir/'];
+    path_read  = [path_root 'stability_' fir '_' task '_' tr{tt} scrub '/stability_group/fir/'];
     path_fmri  = [path_root 'fmri_preprocess_ALL_task/fmri/'];
     list_files = dir([path_read 'fir_group_level_*']);
     list_files = {list_files.name};
