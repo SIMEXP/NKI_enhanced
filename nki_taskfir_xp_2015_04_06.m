@@ -29,7 +29,8 @@ pheno = pheno(2:end,2:end);
 %% Load data
 for tt = 1:length(tr)
     path_read  = [path_root 'stability_' fir '_' task '_' tr{tt} scrub '/stability_group/fir/'];
-    path_fmri  = [path_root 'fmri_preprocess_ALL_task/fmri/'];
+    path_fmri  = [path_root 'fmri_preprocess_ALL_task' scrub '/fmri/'];
+    files_out  = niak_grab_all_preprocess([path_root 'fmri_preprocess_ALL_task' scrub]);
     list_files = dir([path_read 'fir_group_level_*']);
     list_files = {list_files.name};
     
