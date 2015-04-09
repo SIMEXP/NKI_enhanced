@@ -174,6 +174,7 @@ for tt = 1:length(tr)
     list_files(cellfun(@isempty,list_files)) = [];   %remove empty cells 
     pheno_r = cell(length(list_files),size(pheno,2));
     for ff = 1:length(list_files);
+        niak_progress( ff , length(list_files))
         subject = list_files{ff}(end-10:end-4);
         ind_s = find(ismember(lx,subject));
         pheno_r(ff,:) = pheno(ind_s,:);
@@ -250,25 +251,25 @@ for tt = 1:length(tr)
             %weights(:,cc) = sum((fir_td-repmat(avg_clust(:,cc),[1 size(fir_td,2)])).^2);
             weights(:,cc) = corr(fir_td,avg_clust(:,cc));
         end
-     end
-end
 
-%      %% GLM analysis 
-%        for cc = 1:length(list_cov)
-%            covar = tab2(:,list_cov(cc));
-%            fd = tab2(:,21);
-%            age = tab2(:,1);
-%            sex = tab2(:,2);
-%            mask_covar = ~isnan(covar);
-%            model_covar.x = [ones(sum(mask_covar),1) niak_normalize_tseries([covar(mask_covar) fd(mask_covar)],'mean')];
-%            model_covar.y = weights1(mask_covar,:);
-%            model_covar.c = [0 ; 1 ; 0];
-%            opt_glm.test = 'ttest';
-%            opt_glm.flag_beta = true;
-%            res_covar1 = niak_glm(model_covar,opt_glm);
-%            model_covar.y = weights2(mask_covar,:);
-%            res_covar2 = niak_glm(model_covar,opt_glm);
-%            fprintf('%s\n',ly{list_cov(cc)});
-%            pce1(cc,:,ind_net) = res_covar1.pce;
-%            pce2(cc,:,ind_net) = res_covar2.pce;
-%        end
+        %% GLM analysis 
+        list_cov = { 'Age' };
+        for cco = 1:length(list_cov)
+            ind_cov = find(ismember(ly,list_cov{cco}));
+            covar = pheno_num(:,ind_cov);
+            mask_covar = ~isnan(covar);
+            %%% Ugly fix
+            mask_covar = mask_covar & (covar<999);
+            model_covar.x = [ones(sum(mask_covar),1) niak_normalize_tseries(covar(mask_covar),'none')];
+            model_covar.y = weights(mask_covar,:);
+            model_covar.c = [0 ; 1 ];
+            opt_glm.test = 'ttest';
+            opt_glm.flag_beta = true;
+            res_covar = niak_glm(model_covar,opt_glm);
+            fprintf('%s\n',ly{ind_cov});
+            pce(cco,:,ii) = res_covar.pce;
+        end
+        %plot(model_covar.x(:,2),model_covar.y(:,2),'.')
+    end
+end
+[fdr,test] = niak_fdr(pce(:),'BH',0.05);
