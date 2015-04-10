@@ -15,7 +15,7 @@
 clear
 path_root = '/media/database10/nki_enhanced/';
 list_scale = { 'sci190_scg152_scf176'};
-task = 'breathhold' ;
+task = 'breathHold' ;
 tr = {'1400'};
 fir = 'fir_perc';
 scrub = '';
@@ -150,15 +150,35 @@ tr = {'1400'};
 fir = 'fir_perc';
 scrub = '_noscrub';
 
-%%Load phenotypes
-pheno = niak_read_csv_cell([path_root 'nki-rs_lite_r1-2-3-4-5_phenotypic_v1.csv']);
+%%Load phenotypes and scrubbing data
+%combine pheno and scrubbing
+pheno_raw = niak_read_csv_cell([path_root 'nki-rs_lite_r1-2-3-4-5_phenotypic_v1.csv']);
+master_cell = pheno_raw;
+files_out  = niak_grab_all_preprocess([path_root 'fmri_preprocess_ALL_task' scrub]);
+clear slave_cell
+slave_cell = niak_read_csv_cell(files_out.quality_control.group_motion.scrubbing);
+mask_cell_slave = strfind(slave_cell(:,1),[ task tr{1}])
+
+slave_cell(cellfun(@isempty,mask_slave_cell)) = [];
+
+for cc = 1:length(slave_cell)-1;
+    slave_cell{cc+1,1} = slave_cell{cc+1,1}(2:8);
+end
+
+pheno=combine_cell_tab(master_cell,slave_cell);
+%cleannig data
+mask_pheno = cellfun(@(x) str2num(x)>100, pheno(2:end,2));%create mask for wrong age cells less than 100
 lx = pheno(2:end,1);
+lx(mask_pheno,:) = [];%remove wrong age cells ID
 ly = pheno(1,2:end)';
 pheno = pheno(2:end,2:end);
+pheno(mask_pheno,:) = [];%remove wrong age cells data
+
+
 
 %% Load data
 for tt = 1:length(tr)
-    path_read  = [path_root 'stability_' fir '_' task '_' tr{tt} scrub '/stability_group/fir/'];
+    path_read  = [path_root 'stability_' fir '_' lower(task) '_' tr{tt} scrub '/stability_group/fir/'];
     path_fmri  = [path_root 'fmri_preprocess_ALL_task/fmri/'];
     list_files = dir([path_read 'fir_group_level_*']);
     list_files = {list_files.name};
@@ -171,6 +191,7 @@ for tt = 1:length(tr)
             list_files{ff}= [];
         end
     end
+    
     list_files(cellfun(@isempty,list_files)) = [];   %remove empty cells 
     pheno_r = cell(length(list_files),size(pheno,2));
     for ff = 1:length(list_files);
@@ -195,7 +216,7 @@ for xx = 1:size(pheno_r,1)
     end
 end
 % visualise the partition
-path_scales =  [path_root 'stability_' fir '_' task '_' tr{1} scrub '/stability_group/' list_scale{1} ];
+path_scales =  [path_root 'stability_' fir '_' lower(task) '_' tr{1} scrub '/stability_group/' list_scale{1} ];
 opt.flag_zip = true;
 niak_brick_mnc2nii(path_scales,[path_scales '_nii'],opt)
 cd([path_scales '_nii'])
@@ -258,8 +279,6 @@ for tt = 1:length(tr)
             ind_cov = find(ismember(ly,list_cov{cco}));
             covar = pheno_num(:,ind_cov);
             mask_covar = ~isnan(covar);
-            %%% Ugly fix
-            mask_covar = mask_covar & (covar<999);
             model_covar.x = [ones(sum(mask_covar),1) niak_normalize_tseries(covar(mask_covar),'none')];
             model_covar.y = weights(mask_covar,:);
             model_covar.c = [0 ; 1 ];
