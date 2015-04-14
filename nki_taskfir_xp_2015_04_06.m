@@ -329,11 +329,15 @@ for tt = 1:length(tr)
 
         %% GLM analysis 
         list_cov = { 'Age','Sex','FD' };
+        mask_covar = []
         for cco = 1:length(list_cov)
             ind_cov = find(ismember(ly,list_cov{cco}));
             covar = pheno_num(:,ind_cov);
-            mask_covar = ~isnan(covar);
+            mask_covar =[mask_covar ~isnan(covar)];
+            
+        end 
             model_covar.x = [ones(sum(mask_covar),1) niak_normalize_tseries(covar(mask_covar),'none')];
+            
             model_covar.y = weights(mask_covar,:);
             model_covar.c = [0 ; 1 ];
             opt_glm.test = 'ttest';
@@ -345,6 +349,18 @@ for tt = 1:length(tr)
         %plot(model_covar.x(:,2),model_covar.y(:,2),'.')
     end
 end
-[fdr,test] = niak_fdr(pce(:),'BH',0.05);
+%  [fdr,test] = niak_fdr(pce(:),'BH',0.05);
+%  a=ones(5,5)
+%    462 a(2,5)=0
+%    463 a(1,2)=0
+%    464 a(4,2)=0
+%    465 a(4,2)=1
+%    466 a(2,2)=1
+%    467 a(2,2)=0
+%    
+%  479 [y,x]=find(a==0)
+%    480 ind = ones(size(a),1)
+%    481 ind(unique(y)) =0
+%    482 a(logical(ind),:)
 
 
