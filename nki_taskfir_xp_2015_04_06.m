@@ -346,14 +346,18 @@ for tt = 1:length(tr)
         end    
             model_covar.x = [ones(sum(ind),1) model_tmp];
             model_covar.y = weights(logical(ind),:);
-            model_covar.c = [0 ; 1 ; 1 ; 1];
+            model_covar.c = [0 ; 1 ; 0 ; 1];
             opt_glm.test = 'ttest';
             opt_glm.flag_beta = true;
             res_covar = niak_glm(model_covar,opt_glm);
             fprintf('%s\n',ly{ind_cov});
             pce(cco,:,ii) = res_covar.pce;
             end
-            %plot(model_covar.x(:,2),model_covar.y(:,2),'.')
+            hold off
+            for pp = 1:nb_clust(tt)
+                figure(ii+pp+length(list_ind))
+                plot(model_covar.x(:,2),model_covar.y(:,pp),[list_color{pp} '.'])
+            end
     end
 end
 [fdr,test] = niak_fdr(pce(:),'BH',0.05);
