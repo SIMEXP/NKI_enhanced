@@ -157,23 +157,39 @@ for tt = 1:length(tr)
             %weights(:,cc) = sum((fir_td-repmat(avg_clust(:,cc),[1 size(fir_td,2)])).^2);
             weights(:,cc) = corr(fir_td,avg_clust(:,cc));
         end
-
+        
         %% GLM analysis 
         list_cov = { 'Age','Sex','FD' };
+        mask_covar = [];
+        ind=[];
+        covar = [];
         for cco = 1:length(list_cov)
             ind_cov = find(ismember(ly,list_cov{cco}));
-            covar = pheno_num(:,ind_cov);
-            mask_covar = ~isnan(covar);
-            model_covar.x = [ones(sum(mask_covar),1) niak_normalize_tseries(covar(mask_covar),'none')];
-            model_covar.y = weights(mask_covar,:);
-            model_covar.c = [0 ; 1 ];
-            opt_glm.test = 'ttest';
-            opt_glm.flag_beta = true;
-            res_covar = niak_glm(model_covar,opt_glm);
-            fprintf('%s\n',ly{ind_cov});
-            pce(cco,:,ii) = res_covar.pce;
+            covar = [covar pheno_num(:,ind_cov)];
+            mask_covar =[mask_covar ~isnan(covar)];   
         end
-        %plot(model_covar.x(:,2),model_covar.y(:,2),'.')
+        [y,x]=find(mask_covar == 0);
+        ind = ones(size(mask_covar),1);
+        ind(unique(y)) = 0;
+        model_tmp = [];
+        % load model
+        for ccx = 1 : length(list_cov)
+            model_tmp = [model_tmp niak_normalize_tseries(covar(logical(ind),ccx),'none')];
+        end    
+        model_covar.x = [ones(sum(ind),1) model_tmp];
+        model_covar.y = weights(logical(ind),:);
+        model_covar.c = [0 ; 1 ; 0 ; 1];
+        opt_glm.test = 'ttest';
+        opt_glm.flag_beta = true;
+        res_covar = niak_glm(model_covar,opt_glm);
+        fprintf('%s\n',ly{ind_cov});
+        pce(cco,:,ii) = res_covar.pce;
+        % plot glm
+        hold off
+        for pp = 1:nb_clust(tt)
+            figure(ii+pp+length(list_ind))
+            plot(model_covar.x(:,2),model_covar.y(:,pp),[list_color{pp} '.'])
+        end
     end
 end
 [fdr,test] = niak_fdr(pce(:),'BH',0.05);
@@ -341,23 +357,24 @@ for tt = 1:length(tr)
         ind = ones(size(mask_covar),1);
         ind(unique(y)) = 0;
         model_tmp = [];
+        % load model
         for ccx = 1 : length(list_cov)
             model_tmp = [model_tmp niak_normalize_tseries(covar(logical(ind),ccx),'none')];
         end    
-            model_covar.x = [ones(sum(ind),1) model_tmp];
-            model_covar.y = weights(logical(ind),:);
-            model_covar.c = [0 ; 1 ; 0 ; 1];
-            opt_glm.test = 'ttest';
-            opt_glm.flag_beta = true;
-            res_covar = niak_glm(model_covar,opt_glm);
-            fprintf('%s\n',ly{ind_cov});
-            pce(cco,:,ii) = res_covar.pce;
-            end
-            hold off
-            for pp = 1:nb_clust(tt)
-                figure(ii+pp+length(list_ind))
-                plot(model_covar.x(:,2),model_covar.y(:,pp),[list_color{pp} '.'])
-            end
+        model_covar.x = [ones(sum(ind),1) model_tmp];
+        model_covar.y = weights(logical(ind),:);
+        model_covar.c = [0 ; 1 ; 0 ; 1];
+        opt_glm.test = 'ttest';
+        opt_glm.flag_beta = true;
+        res_covar = niak_glm(model_covar,opt_glm);
+        fprintf('%s\n',ly{ind_cov});
+        pce(cco,:,ii) = res_covar.pce;
+        %plot glm
+        hold off
+        for pp = 1:nb_clust(tt)
+            figure(ii+pp+length(list_ind))
+            plot(model_covar.x(:,2),model_covar.y(:,pp),[list_color{pp} '.'])
+        end
     end
 end
 [fdr,test] = niak_fdr(pce(:),'BH',0.05);
