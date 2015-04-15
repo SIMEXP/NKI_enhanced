@@ -329,38 +329,47 @@ for tt = 1:length(tr)
 
         %% GLM analysis 
         list_cov = { 'Age','Sex','FD' };
-        mask_covar = []
+        mask_covar = [];
+        ind=[];
+        covar = [];
         for cco = 1:length(list_cov)
             ind_cov = find(ismember(ly,list_cov{cco}));
-            covar = pheno_num(:,ind_cov);
-            mask_covar =[mask_covar ~isnan(covar)];
-            
-        end 
-            model_covar.x = [ones(sum(mask_covar),1) niak_normalize_tseries(covar(mask_covar),'none')];
-            
-            model_covar.y = weights(mask_covar,:);
-            model_covar.c = [0 ; 1 ];
+            covar = [covar pheno_num(:,ind_cov)];
+            mask_covar =[mask_covar ~isnan(covar)];   
+        end
+        [y,x]=find(mask_covar == 0);
+        ind = ones(size(mask_covar),1);
+        ind(unique(y)) = 0;
+        model_tmp = [];
+        for ccx = 1 : length(list_cov)
+            model_tmp = [model_tmp niak_normalize_tseries(covar(logical(ind),ccx),'none')];
+        end    
+            model_covar.x = [ones(sum(ind),1) model_tmp];
+            model_covar.y = weights(logical(ind),:);
+            model_covar.c = [0 ; 1 ; 1 ; 1];
             opt_glm.test = 'ttest';
             opt_glm.flag_beta = true;
             res_covar = niak_glm(model_covar,opt_glm);
             fprintf('%s\n',ly{ind_cov});
             pce(cco,:,ii) = res_covar.pce;
-        end
-        %plot(model_covar.x(:,2),model_covar.y(:,2),'.')
+            end
+            %plot(model_covar.x(:,2),model_covar.y(:,2),'.')
     end
 end
-%  [fdr,test] = niak_fdr(pce(:),'BH',0.05);
-%  a=ones(5,5)
-%    462 a(2,5)=0
-%    463 a(1,2)=0
-%    464 a(4,2)=0
-%    465 a(4,2)=1
-%    466 a(2,2)=1
-%    467 a(2,2)=0
-%    
-%  479 [y,x]=find(a==0)
-%    480 ind = ones(size(a),1)
-%    481 ind(unique(y)) =0
-%    482 a(logical(ind),:)
+[fdr,test] = niak_fdr(pce(:),'BH',0.05);
 
 
+
+
+%  a=ones(5,4)
+%  a(2,4)=0
+%  a(1,2)=0
+%  a(4,2)=0
+%  a(2,2)=0
+%  [y,x]=find(a==0)
+%  ind = ones(size(a),1)
+%  ind(unique(y)) =0
+%  a(~logical(ind),:)=[]
+%  
+%  
+%  
