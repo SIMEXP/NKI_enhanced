@@ -178,13 +178,17 @@ for tt = 1:length(tr)
         end    
         model_covar.x = [ones(sum(ind),1) model_tmp];
         model_covar.y = weights(logical(ind),:);
-        model_covar.c = [0 ; 1 ; 0 ; 1];
-        opt_glm.test = 'ttest';
-        opt_glm.flag_beta = true;
-        res_covar = niak_glm(model_covar,opt_glm);
-        fprintf('%s\n',ly{ind_cov});
-        pce(cco,:,ii) = res_covar.pce;
-        % plot glm
+        for cco = 1:length(list_cov) 
+            ind_cov = find(ismember(ly,list_cov{cco}));
+            model_covar.c = zeros(1,size(model_covar.x,2))';           
+            model_covar.c(cco+1) = 1;
+            opt_glm.test = 'ttest';
+            opt_glm.flag_beta = true;
+            res_covar = niak_glm(model_covar,opt_glm);
+            fprintf('%s\n',ly{ind_cov});
+            pce(cco,:,ii) = res_covar.pce;
+        end
+        %plot glm
         hold off
         for pp = 1:nb_clust(tt)
             figure(ii+pp+length(list_ind))

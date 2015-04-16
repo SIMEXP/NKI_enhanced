@@ -1,22 +1,22 @@
 %  this script is to run on peuplier
 
-%  NKI Breath hold subgoups fir
+%  NKI Checkerboard subgoups fir
 %  Experiments Summary:
 %  
 
-%  EXP1a: Scrubbing off - Normalisation 'fir_perc' - scale sci150_scg150_scf153
-%  EXP1b: Scrubbing off - Normalisation 'shape' - scale 198
+%  EXP1a: Scrubbing off - Normalisation 'fir_perc' - scale sci150_scg135_scf134
+%  EXP1b: Scrubbing off - Normalisation 'shape' - scale sci140_scg126_scf135
 
 
 
 %  EXP1a:
-%  In this EXP I'm using Breath-hold task individual fir from scale sci150_scg150_scf153, the fir normalisation is perc. Data are not scrubbed.
+%  In this EXP I'm using Checkerboard individual fir from scale sci150_scg135_scf134, the fir normalisation is perc. Data are not scrubbed.
 
 clear
 path_root =  '/media/database10/nki_enhanced/';
-list_scale = { 'sci150_scg150_scf153'};
-task = 'breathHold' ;
-tr = {'1400'};
+list_scale = { 'sci150_scg135_scf134'};
+task = 'checkerboard' ;
+tr = {'645'};
 fir = 'fir_perc';
 scrub = '_noscrub';
 list_cov = { 'Age','Sex','FD' };
@@ -30,7 +30,7 @@ files_out  = niak_grab_all_preprocess([path_root 'fmri_preprocess_ALL_task' scru
 slave_cell = niak_read_csv_cell(files_out.quality_control.group_motion.scrubbing);
 ly = slave_cell(1,:);
 slave_cell = slave_cell(2:end,:);
-mask_slave_cell = strfind(slave_cell(:,1),[task tr{1}]);%mask selected task and tr
+mask_slave_cell = strfind(slave_cell(:,1),['checBoard' tr{1}]);%mask selected task and tr
 mask_slave_cell = cellfun(@isempty,mask_slave_cell);
 slave_cell(mask_slave_cell,:) = [];
 slave_cell = [ly; slave_cell];
@@ -110,7 +110,7 @@ system('mricron  ~/database/white_template.nii.gz -c -0 -o max_abs_eff.nii.gz -c
 system(['mricron ~/database/white_template.nii.gz -c -0 -o ' path_scales '_nii/brain_partition_consensus_group_' list_scale{1} '.nii.gz -c NIH -l 1 -h 154 -z &']);
 
 %% More parameters
-list_ind = [ 84 , 128 , 59 , 149 , 110 , 83 ];
+list_ind = [  97 , 72 , 53 ];
 list_color = {'r','b','g','k','p'};
 
 %% Hierarchical clustering
@@ -178,13 +178,17 @@ for tt = 1:length(tr)
         end    
         model_covar.x = [ones(sum(ind),1) model_tmp];
         model_covar.y = weights(logical(ind),:);
-        model_covar.c = [0 ; 1 ; 0 ; 1];
-        opt_glm.test = 'ttest';
-        opt_glm.flag_beta = true;
-        res_covar = niak_glm(model_covar,opt_glm);
-        fprintf('%s\n',ly{ind_cov});
-        pce(cco,:,ii) = res_covar.pce;
-        % plot glm
+        for cco = 1:length(list_cov) 
+            ind_cov = find(ismember(ly,list_cov{cco}));
+            model_covar.c = zeros(1,size(model_covar.x,2))';           
+            model_covar.c(cco+1) = 1;
+            opt_glm.test = 'ttest';
+            opt_glm.flag_beta = true;
+            res_covar = niak_glm(model_covar,opt_glm);
+            fprintf('%s\n',ly{ind_cov});
+            pce(cco,:,ii) = res_covar.pce;
+        end
+        %plot glm
         hold off
         for pp = 1:nb_clust(tt)
             figure(ii+pp+length(list_ind))
@@ -195,13 +199,13 @@ end
 [fdr,test] = niak_fdr(pce(:),'BH',0.05);
 
 %  EXP1b: 
-%  in this EXP I'm using Breath-hold task individual fir from scale 'sci180_scg180_scf189', the fir normalisation is 'fir_shape'. Data are not scrubbed.
+%  in this EXP I'm using Breath-hold task individual fir from scale 'sci140_scg126_scf135', the fir normalisation is 'fir_shape'. Data are not scrubbed.
 
 clear
 path_root =  '/media/database10/nki_enhanced/';
-list_scale = { 'sci180_scg180_scf189'};
-task = 'breathHold' ;
-tr = {'1400'};
+list_scale = { 'sci140_scg126_scf135'};
+task = 'checkerboard' ;
+tr = {'645'};
 fir = 'fir_shape';
 scrub = '_noscrub';
 list_cov = { 'Age','Sex','FD' };
@@ -215,7 +219,7 @@ files_out  = niak_grab_all_preprocess([path_root 'fmri_preprocess_ALL_task' scru
 slave_cell = niak_read_csv_cell(files_out.quality_control.group_motion.scrubbing);
 ly = slave_cell(1,:);
 slave_cell = slave_cell(2:end,:);
-mask_slave_cell = strfind(slave_cell(:,1),[task tr{1}]);%mask selected task and tr
+mask_slave_cell = strfind(slave_cell(:,1),['checBoard' tr{1}]);%mask selected task and tr
 mask_slave_cell = cellfun(@isempty,mask_slave_cell);
 slave_cell(mask_slave_cell,:) = [];
 slave_cell = [ly; slave_cell];
@@ -295,7 +299,7 @@ system('mricron  ~/database/white_template.nii.gz -c -0 -o max_abs_eff.nii.gz -c
 system(['mricron ~/database/white_template.nii.gz -c -0 -o ' path_scales '_nii/brain_partition_consensus_group_' list_scale{1} '.nii.gz -c NIH -l 1 -h 154 -z &']);
 
 %% More parameters
-list_ind = [ 163 , 74 , 42 , 58 , 164 , 130 , 125 ];
+list_ind = [ 49, 81 , 60 , 112 , 36 ];
 list_color = {'r','b','g','k','p'};
 
 %% Hierarchical clustering
