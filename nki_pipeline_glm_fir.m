@@ -20,19 +20,21 @@ function [] = nki_pipeline_glm_fir(opt)
 %   TST
 %       (string, default '') type of test used. Warning: put the prefix "_" before the test name (ex: "_noscrub")
 %
-%   MODEL
-%       (structure) see the OPT argument of  NKI_MODEL_<TASK-NAME>. 
-%       The default parameters may work.
+%   GLM
+%       (string, default '01') number of GLM experiment.
 %
 %   TYPE_NORM
 %       (string, default 'fir') type of fir estimate normalisation. Possibles types are: 'fir',
 %       'fir_shape'. see niak_normalize_fir for explanation
 %
+%   MODEL
+%       (structure) see the OPT argument of  NKI_MODEL_<TASK-NAME>. 
+%       The default parameters may work.
 %
 %
 % _________________________________________________________________________
 %
-% Script to run a STABILITY_FIR pipeline analysis on the NKI_enhanced database.
+% Script to run a GLM_FIR pipeline analysis on the NKI_enhanced database.
 %
 % Copyright (c) Pierre Bellec, Yassine Benhajali
 % Research Centre of the Montreal Geriatric Institute
@@ -61,36 +63,7 @@ function [] = nki_pipeline_glm_fir(opt)
 % _________________________________________________________________________
 %
 
-%%%%%%%%%%%%%%%%%%%%%
-%% Parameters
-%%%%%%%%%%%%%%%%%%%%%
-%% set experimentent
-list_fields   = { 'task'         , 'exp'  , 'model' ,'type_norm' ,'tst'};
-list_defaults = { 'checkerboard' , '1400' , struct(),'fir'       ,''    };
-if ischar (opt.task ) &&  ischar(opt.exp)
-   if ismember(opt.task,{'checkerboard','breathhold'}) && ismember(opt.exp,{'1400','645'})
-      opt = psom_struct_defaults(opt,list_fields,list_defaults);
-   else
-      error('wrong task or TR/EXP , see help nki_pipeline_stability_fir')
-   end
-else 
-   error ( 'you must specify the task and the TR')
-end
-
-task  = opt.task;
-exp   = opt.exp;
-tst   = opt.tst;
-if ismember(opt.type_norm,{'fir'})
-   type_norm = 'perc';
-elseif ismember(opt.type_norm,{'fir_shape'})
-   type_norm = 'shape';
-else
-   error('wrong normalisation type')
-end
-if isempty(tst); tst_tmp = 'on';else tst_tmp = 'off'; end
-fprintf ('script to run nki_glm_fir pipeline \n Task: %s \n TR: %s\n normalisation: fir %s\n scrubbing: %s\n ',task,exp,type_norm,tst_tmp)
-
-%% Setting input/output files 
+%%%% Setting default input/output root path 
 [status,cmdout] = system ('uname -n');
 server          = strtrim(cmdout);
 if strfind(server,'lg-1r') % This is guillimin
@@ -114,20 +87,41 @@ else
         my_user_name = getenv('USER');
     end
 end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%
+%% Parameters
+%%%%%%%%%%%%%%%%%%%%%
+%% set experimentent
+list_fields   = { 'task'         , 'exp'  , 'glm' ,'type_norm' ,'tst'      , 'model' };
+list_defaults = { 'checkerboard' , '1400' , '01'  ,'fir'       ,'_noscrub' , struct() };
 
+if ismember(opt.task,{'checkerboard','breathhold'}) && ismember(opt.exp,{'1400','645'})
+   opt = psom_struct_defaults(opt,list_fields,list_defaults);
+else
+   error('wrong task or TR/EXP , see help nki_pipeline_glm_fir')
+end
 
-
-
-
-
-
-
+% Simplyfing and formatting input variables 
+task  = opt.task;
+exp   = opt.exp;
+tst   = opt.tst;
+glm   = opt.glm;
+if ismember(opt.type_norm,{'fir'})
+   type_norm = 'perc';
+elseif ismember(opt.type_norm,{'fir_shape'})
+   type_norm = 'shape';
+else
+   error('wrong normalisation type')
+end
+if isempty(tst); tst_tmp = 'on';else tst_tmp = 'off'; end
+fprintf ('script to run nki_glm_fir pipeline \n Task: %s \n TR: %s\n normalisation: fir %s\n scrubbing: %s\n ',task,exp,type_norm,tst_tmp)
 
 %%%%%%%%%%%%%%%%%%%%
-%% Grabbing the results from the NIAK fMRI preprocessing pipeline
+%% Grabbing the results and models from fMRI preprocessing and fir pipelines
 %%%%%%%%%%%%%%%%%%%%%
 fmri_path = [root_path 'fmri_preprocess_ALL_task' tst '/'];
+stability_fir_path = [root_path 'stability_fir_' type_norm  '_' lower(task) '_' exp tst];
 opt_g.min_nb_vol = 1;     % The minimum number of volumes for an fMRI dataset to be included. This option is useful when scrubbing is used, and the resulting time series may be too short.
 opt_g.min_xcorr_func = 0.5; % The minimum xcorr score for an fMRI dataset to be included. This metric is a tool for quality control which assess the quality of non-linear coregistration of functional images in stereotaxic space. Manual inspection of the values during QC is necessary to properly set this threshold.
 opt_g.min_xcorr_anat = 0.5; % The minimum xcorr score for an fMRI dataset to be included. This metric is a tool for quality control which assess the quality of non-linear coregistration of the anatomical image in stereotaxic space. Manual inspection of the values during QC is necessary to properly set this threshold.
@@ -139,41 +133,39 @@ opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the 
 %liste_exclude = {liste_exclude.name};
 %opt_g.exclude_subject = liste_exclude;
 
-
 switch lower(task)
       case 'checkerboard'
-      opt_g.filter.run = {['checBoard' exp]};
-      files_in = niak_grab_fmri_preprocess(fmri_path,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored.
       task_tmp = 'checBoard';
-      %% Event times
-      data.covariates_group_subs = fieldnames(files_in.fmri);
-      for list = 1:length(data.covariates_group_subs)    
-          files_in.timing.(data.covariates_group_subs{list}).sess1.(['checBoard' exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '.csv'];
-      end
-
+      opt_g.filter.run = {[task_tmp exp]};
+      files_in = rmfield(niak_grab_fmri_preprocess(fmri_path,opt_g),{'mask','areas'}); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored.
       case 'breathhold'
-      opt_g.filter.run = {['breathHold' exp]};
-      files_in = niak_grab_fmri_preprocess(fmri_path,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored.
       task_tmp = 'breathHold';
-      %% Event times
-      data.covariates_group_subs = fieldnames(files_in.fmri);
-      for list = 1:length(data.covariates_group_subs)    
-          files_in.timing.(data.covariates_group_subs{list}).sess1.(['breathHold' exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '.csv'];
-      end
+      opt_g.filter.run = {[task_tmp exp]};
+      files_in = rmfield(niak_grab_fmri_preprocess(fmri_path,opt_g),{'mask','areas'}); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored.
 end
 
-list_cov = { 'Age','Sex','FD' };
-list_remove_pheno = { 'Download Group','frames_OK','frames_scrubbed'};
+%% Set the indiviual models
+data.covariates_group_subs = fieldnames(files_in.fmri);
+for list = 1:length(data.covariates_group_subs)    
+    files_in.model.individual.(data.covariates_group_subs{list}).sess1.([task_tmp exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '.csv'];
+end
 
-%%Load phenotypes and scrubbing data
-%combine pheno and scrubbing
+%% set the networks
+files_in.networks = niak_grab_stability_fir(stability_fir_path).networks ;
+
+%%%%%%%%%%%%%%%%%%%%
+%% Create group model csv file
+%%%%%%%%%%%%%%%%%%%%%
+
+%%Load phenotypes and scrubbing data then combine them in one csv file
+list_remove_pheno = { 'Download Group','frames_OK','frames_scrubbed'};
 pheno_raw = niak_read_csv_cell([root_path 'nki-rs_lite_r1-2-3-4-5_phenotypic_v1.csv']);
 master_cell = pheno_raw;
 files_out  = niak_grab_all_preprocess([root_path 'fmri_preprocess_ALL_task' tst]);
 slave_cell = niak_read_csv_cell(files_out.quality_control.group_motion.scrubbing);
 ly = slave_cell(1,:);
 slave_cell = slave_cell(2:end,:);
-mask_slave_cell = strfind(slave_cell(:,1),[task_tmp tr]);%mask selected task_tmp and tr
+mask_slave_cell = strfind(slave_cell(:,1),[task_tmp exp]);%mask selected task_tmp and tr
 mask_slave_cell = cellfun(@isempty,mask_slave_cell);
 slave_cell(mask_slave_cell,:) = [];
 slave_cell = [ly; slave_cell];
@@ -196,60 +188,63 @@ pheno(:,3) = strrep(pheno(:,3),'F','0'); %replace male 'M' by '0'
 pheno(:,4) = strrep(pheno(:,4),'Right','1'); %replace 'Right' by '1'
 pheno(:,4) = strrep(pheno(:,4),'Left','0'); %replace 'Left' by '0'
 pheno(:,4) = strrep(pheno(:,4),'None','NaN'); %replace 'None' by 'NaN'
-mask_pheno = cellfun(@(x) str2num(x)>100, pheno(2:end,2));%create mask for wrong age cells less than 100
+mask_pheno = cellfun(@(x) str2num(x)>100, pheno(2:end,2));%create mask for wrong age cells (higher than 99)
 lx = pheno(2:end,1);
 lx(mask_pheno,:) = [];%remove wrong age cells ID
-ly = pheno(1,2:end)';
-pheno = pheno(2:end,2:end);
-pheno(mask_pheno,:) = [];%remove wrong age cells data
+for ii = 1:length(lx)
+    lx{ii} = ['X' lx{ii}];%add X prefix in subject ID
+end
+ly = pheno(1,:);
+pheno_tmp = pheno(2:end,2:end);
+pheno_tmp(mask_pheno,:) = [];%remove wrong age cells data
+pheno_clean = [lx  pheno_tmp];
+pheno_clean = [ly ; pheno_clean];
+name_save = [stability_fir_path filesep 'group_model_' type_norm  '_' lower(task) '_' exp tst '_' glm '.csv'];
+niak_write_csv_cell(name_save,pheno_clean);
 
-
+%goupe model 
+files_in.model.group = name_save;
 
 %%%%%%%%%%%%%
 %% Options %%
 %%%%%%%%%%%%%
 
-%% BASC
-opt.folder_out = [ root_path '/stability_fir_' type_norm  '_' lower(task) '_' exp tst ]; % Where to store the results
-opt.grid_scales = [5:5:50 60:10:200 220:20:400 500:100:900]; % Search in the range 2-900 clusters
-% use mstep sacle if exist or leave it empty
-mstep_file = [ opt.folder_out filesep 'stability_group/msteps_group.mat'];
-if psom_exist(mstep_file)
-   warning ('The file %s exist, I will use MSTEP scale',mstep_file);
-   load (mstep_file);
-   opt.scales_maps = scales_final;
-else
-   warning ('The file %s does not exist, I will use the specified scale maps',mstep_file);
-   opt.scales_maps = []; % Usually, this is initially left empty. After the pipeline ran a first time, the results of the MSTEPS procedure are used to select the final scales 
-end
-opt.stability_fir.nb_samps = 100;    % Number of bootstrap samples at the individual level. 100: the CI on indidividual stability is +/-0.1
-opt.stability_fir.std_noise = 0;     % The standard deviation of the judo noise. The value 0 will not use judo noise. 
-opt.stability_group.nb_samps = 500;  % Number of bootstrap samples at the group level. 500: the CI on group stability is +/-0.05
-opt.nb_min_fir = 1;    % the minimum response windows number. By defaut is set to 1
-opt.stability_group.min_subject = 2; % (integer, default 3) the minimal number of subjects to start the group-level stability analysis. An error message will be issued if this number is not reached.
-%% FIR estimation 
-opt.name_condition = lower(task);
-opt.name_baseline = 'baseline';
+opt.folder_out = [stability_fir_path filesep 'glm_fir_' type_norm  '_' lower(task) '_' exp tst '_' glm '/'];; % Where to store the results
+opt.fdr        = 0.05; % The maximal false-discovery rate that is tolerated both for individual (single-seed) maps and whole-connectome discoveries, at each particular scale (multiple comparisons across scales are addressed via permutation testing)
+opt.fwe        = 0.05; % The overall family-wise error, i.e. the probablity to have the observed number of discoveries, agregated across all scales, under the global null hypothesis of no association.
+opt.nb_samps   = 1000; % The number of samples in the permutation test. This number has to be multiplied by OPT.NB_BATCH below to get the effective number of samples
+opt.nb_batch   = 10; % The permutation tests are separated into NB_BATCH independent batches, which can run on parallel if sufficient computational resources are available
+
+%% FIR 
+opt.fir.name_condition = lower(task);
+opt.fir.name_baseline = 'baseline';
 opt.fir.type_norm     = opt.type_norm;       % The type of normalization of the FIR.
 opt.fir.time_window   = opt.model.trial_duration;        % The size (in sec) of the time window to evaluate the response
 opt.fir.max_interpolation = (str2num(exp)/1000)*5;    % --> max 5 vols consécutifs manquants, sinon bloc rejeté, mais ça devrait être irrelevant comme pas de scrubbing ici
 opt.fir.time_sampling = str2num(exp)/1000;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
 opt.fir.nb_min_baseline = 1 ;
 
-%% FDR estimation
-opt.nb_samps_fdr = 10000; % The number of samples to estimate the false-discovery rate
+%%%%%%%%%%%
+%% TESTS %%
+%%%%%%%%%%%  
 
-%% Multi-level options
-opt.flag_ind = false;   % Generate maps/FIR at the individual level
-opt.flag_mixed = false; % Generate maps/FIR at the mixed level (group-level networks mixed with individual stability matrices).
-opt.flag_group = true;  % Generate maps/FIR at the group level
+% Regressing Age Sex and FD
+
+%%Age
+opt.test.Age.contrast.Age       = 1;
+opt.test.Age.contrast.Age2      = 0; 
+opt.test.Age.contrast.Sex       = 0;    
+opt.test.Age.contrast.FD        = 0;
+opt.test.Age.interaction.label  = 'Age2';
+opt.test.Age.interaction.factor = {'Age','Age'};
+
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%
 opt.flag_test = false; % Put this flag to true to just generate the pipeline without running it. Otherwise the pipeline will start.
 opt.psom.qsub_options = '-q sw -l nodes=1:ppn=4,walltime=05:00:00';
-pipeline = niak_pipeline_stability_fir(files_in,opt);
+[pipeline,opt_pipe] = niak_pipeline_glm_fir(files_in,opt);
 
 %%extra
 system(['cp ' mfilename('fullpath') '.m ' opt.folder_out '/.']); % make a copie of this script to output folder
