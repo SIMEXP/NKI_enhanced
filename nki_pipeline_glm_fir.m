@@ -231,12 +231,10 @@ opt.fir.nb_min_baseline = 1 ;
 % Regressing Age Sex and FD
 
 %%Age
-opt.test.Age.contrast.Age       = 1;
-opt.test.Age.contrast.Age2      = 0; 
-opt.test.Age.contrast.Sex       = 0;    
+opt.test.Age.contrast.intercept = 1
+opt.test.Age.contrast.Age       = 0;
+opt.test.Age.contrast.Sex       = 0;
 opt.test.Age.contrast.FD        = 0;
-opt.test.Age.interaction.label  = 'Age2';
-opt.test.Age.interaction.factor = {'Age','Age'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%
