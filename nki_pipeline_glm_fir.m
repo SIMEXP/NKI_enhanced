@@ -31,6 +31,8 @@ function [] = nki_pipeline_glm_fir(opt)
 %       (structure) see the OPT argument of  NKI_MODEL_<TASK-NAME>. 
 %       The default parameters may work.
 %
+%   NETWORK
+%       (string, default '') the networks scales. if empty all networks will be grabbed.
 %
 % _________________________________________________________________________
 %
@@ -93,8 +95,8 @@ end
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%
 %% set experimentent
-list_fields   = { 'task'         , 'exp'  , 'glm' ,'type_norm' ,'tst'      , 'model' };
-list_defaults = { 'checkerboard' , '1400' , '01'  ,'fir'       ,'_noscrub' , struct() };
+list_fields   = { 'task'         , 'exp'  , 'glm' ,'type_norm' ,'tst'      , 'model' , 'network'};
+list_defaults = { 'checkerboard' , '1400' , '01'  ,'fir'       ,'_noscrub' , struct() , '' };
 
 if ismember(opt.task,{'checkerboard','breathhold'}) && ismember(opt.exp,{'1400','645'})
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
@@ -151,7 +153,11 @@ for list = 1:length(data.covariates_group_subs)
 end
 
 %% set the networks
-files_in.networks = niak_grab_stability_fir(stability_fir_path).networks ;
+if ~isempty(opt.network)
+   files_in.networks.(getfield(opt,'network')) =  niak_grab_stability_fir(stability_fir_path).networks.(getfield(opt,'network'));
+else
+   files_in.networks = niak_grab_stability_fir(stability_fir_path).networks;
+end
 
 %%%%%%%%%%%%%%%%%%%%
 %% Create group model csv file
@@ -195,6 +201,7 @@ for ii = 1:length(lx)
     lx{ii} = ['X' lx{ii}];%add X prefix in subject ID
 end
 ly = pheno(1,:);
+ly{1} = '';%remove subject column label
 pheno_tmp = pheno(2:end,2:end);
 pheno_tmp(mask_pheno,:) = [];%remove wrong age cells data
 pheno_clean = [lx  pheno_tmp];
@@ -231,10 +238,10 @@ opt.fir.nb_min_baseline = 1 ;
 % Regressing Age Sex and FD
 
 %%Age
-opt.test.Age.contrast.intercept = 1
+opt.test.Age.contrast.intercept = 0
 opt.test.Age.contrast.Age       = 0;
 opt.test.Age.contrast.Sex       = 0;
-opt.test.Age.contrast.FD        = 0;
+opt.test.Age.contrast.FD        = 1;
 
 
 %%%%%%%%%%%%%%%%%%%%%%
