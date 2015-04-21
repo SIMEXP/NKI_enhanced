@@ -93,7 +93,7 @@ fprintf ('script to run nki_stability_fir pipeline \n Task: %s \n TR: %s\n norma
 [status,cmdout] = system ('uname -n');
 server          = strtrim(cmdout);
 if strfind(server,'lg-1r') % This is guillimin
-    root_path = '/home/yassinebha/database2/NKI_enhanced/';
+    root_path = '/gs/scratch/yassinebha/NKI_enhanced/';
     fprintf ('server: %s (Guillimin) \n ',server)
     my_user_name = getenv('USER');
 elseif strfind(server,'ip05') % this is mammouth
