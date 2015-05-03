@@ -45,6 +45,6 @@ for ii = 1:length(list_ind)
         avg_clust(ii,:,cc) = mean(fir_td1(:,part==cc),2);
         weights1(ii,:,cc) = corr(fir_td1,avg_clust(ii,:,cc));
         weights2(ii,:,cc) = corr(fir_td2,avg_clust(ii,:,cc));
-        repro_weights(cc,ii) = IPN_icc([weights1(ii,:,cc) weights2(ii,:,cc)],2,'single'); 
+        repro_weights(cc,ii) = IPN_icc([squeeze(weights1(ii,:,cc))' squeeze(weights2(ii,:,cc))'],2,'single'); 
     end
 end
