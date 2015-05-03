@@ -7,7 +7,7 @@ tr = '1400';
 fir = 'fir_perc';
 scrub = '_noscrub';
 path_run1 = [path_data 'stability_' fir '_' task '_' tr scrub];
-path_run2 = [path_data 'stability_' fir '_' task '_' tr scrub '_resampl1400'];
+path_run2 = [path_data 'stability_' fir '_' task '_' '645' scrub '_resampl1400'];
 
 %% Load data
 path_read1  = [path_run1 '/stability_group/fir/'];

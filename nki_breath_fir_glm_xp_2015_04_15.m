@@ -5,7 +5,7 @@
 %  
 
 %  EXP1a: Scrubbing off - Normalisation 'fir_perc' - scale sci150_scg150_scf153
-%  EXP1b: Scrubbing off - Normalisation 'shape' - scale 198
+%  EXP1b: Scrubbing off - Normalisation 'shape' - scale sci180_scg180_scf189
 
 
 
