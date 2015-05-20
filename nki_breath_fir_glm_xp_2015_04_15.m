@@ -12,8 +12,9 @@
 %  EXP1a:
 %  In this EXP I'm using Breath-hold task individual fir from scale sci150_scg150_scf153, the fir normalisation is perc. Data are not scrubbed.
 
-clear
-path_root =  '/media/database10/nki_enhanced/';
+clear all
+%path_root =  '/media/database10/nki_enhanced/';
+path_root =  '/media/yassinebha/database2/nki_enhanced/';
 list_scale = { 'sci150_scg150_scf153'};
 task = 'breathHold' ;
 tr = {'1400'};
@@ -110,16 +111,17 @@ system('mricron  ~/database/white_template.nii.gz -c -0 -o max_abs_eff.nii.gz -c
 system(['mricron ~/database/white_template.nii.gz -c -0 -o ' path_scales '_nii/brain_partition_consensus_group_' list_scale{1} '.nii.gz -c NIH -l 1 -h 154 -z &']);
 
 %% More parameters
-list_ind = [ 84 , 128 , 59 , 149 , 110 , 83 ];
+%list_ind = [ 84 , 128 , 59 , 149 , 110 , 83 ];
+list_ind = [ 149]
 list_color = {'r','b','g','k','p'};
 
 %% Hierarchical clustering
 for tt = 1:length(tr)
-    clf
     hold off
     for ii = 1:length(list_ind)
         % Clustering of subtypes
         figure(ii)
+        clf
         fir_td = squeeze(fir_all{tt}(:,list_ind(ii),:));
         fir_td = fir_td./repmat(sqrt(sum(fir_td.^2,1)),[size(fir_td,1) 1]);
         fir_td(isnan(fir_td)) = 0;
@@ -135,22 +137,24 @@ for tt = 1:length(tr)
         order = niak_hier2order (hier);
         subplot(3,length(tr),tt)
         niak_visu_matrix(D(order,order));
+        title(sprintf('Breath-hold %s scale %s cluster %i',tr{tt},list_scale{1},list_ind(ii)));
         subplot(3,length(tr),tt+length(tr))
         niak_visu_part(part(order))
         subplot(3,length(tr),tt+2*length(tr))
         plot(sil)
-        hold on
-        plot(nb_clust(tt),val,'rx')
-        
+        %hold on
+        %plot(nb_clust(tt),val,'rx')
+        %hold off
         % Show the subtypes
         figure(ii+length(list_ind))
+        clf
         subplot(1,length(tr),tt)
-        title(sprintf('Task %s',tr{tt}));
+        title(sprintf('Breath-hold %s scale %s cluster %i',tr{tt},list_scale{1},list_ind(ii)));
         for cc = 1:nb_clust(tt)        
             hold on 
             plot(mean(fir_all{tt}(:,list_ind(ii),part==cc),3),list_color{cc})
         end
-        
+        hold off
         %% Build distance scores for all subtypes
         for cc = 1:nb_clust(tt)        
             avg_clust(:,cc) = mean(fir_td(:,part==cc),2);
@@ -192,7 +196,9 @@ for tt = 1:length(tr)
         hold off
         for pp = 1:nb_clust(tt)
             figure(ii+pp+length(list_ind))
+            clf
             plot(model_covar.x(:,2),model_covar.y(:,pp),[list_color{pp} '.'])
+            title(sprintf('Breath-hold %s scale %s cluster %i, subtype %i',tr{tt},list_scale{1},list_ind(ii),pp));
         end
     end
 end

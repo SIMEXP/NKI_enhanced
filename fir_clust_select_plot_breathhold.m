@@ -64,7 +64,7 @@ niak_write_vol(hdr,vol2);
 
 % show brain patition reordered with mricron
 B=size(test_fir.mean)(2);
-system(['mricron ~/database/white_template.nii.gz -c -0 -o ' path_folder filesep partition_nii_file '_select_clust' char(str) '.nii.gz -m  ~/.mricron/multislice/default.ini -c jet_linear -l 0.02 -h ' num2str(B) ' -z & ']);
+system(['mricron ~/database/white_template.nii.gz -c -0 -o ' path_folder filesep partition_nii_file '_select_clust' char(str) '.nii.gz -m  ~/.mricron/multislice/default.ini -c NIH -l 0.02 -h ' num2str(B) ' -z & ']);
 
 % plot fir
 linewidth = 0.1;
