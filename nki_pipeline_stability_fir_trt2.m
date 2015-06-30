@@ -1,8 +1,8 @@
-function [] = nki_pipeline_stability_fir_trt1(opt)
+function [] = nki_pipeline_stability_fir_trt2(opt)
 % function to run a preprocessing pipeline analysis on the nki_enhanced database for test retest1 .
 %
 % SYNTAX:
-% []= NKI_PIPELEINE_STABILITY_FIR_TRT1(OPT);
+% []= NKI_PIPELEINE_STABILITY_FIR_TRT2(OPT);
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -135,7 +135,7 @@ fmri_path = [root_path 'fmri_preprocess_ALL_task' tst '/'];
 
 mkdir(fmri_path,'onset');
 path_folder = [ fmri_path 'onset/'];
-eval([ 'nki_model_' lower(task) '_trt1(path_folder,opt_model)']);
+eval([ 'nki_model_' lower(task) '_trt2(path_folder,opt_model)']);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Grabbing the results from the NIAK fMRI preprocessing pipeline
@@ -168,7 +168,7 @@ switch lower(task)
       %% Event times
       data.covariates_group_subs = fieldnames(files_in.fmri);
       for list = 1:length(data.covariates_group_subs)    
-          files_in.timing.(data.covariates_group_subs{list}).sess1.(['breathHold' exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '_trt1.csv'];
+          files_in.timing.(data.covariates_group_subs{list}).sess1.(['breathHold' exp]) = [fmri_path 'onset/nki_model_intrarun_' lower(opt.task) '_trt2.csv'];
       end
 end
 
@@ -177,7 +177,7 @@ end
 %%%%%%%%%%%%%
 
 %% BASC
-opt.folder_out = [ root_path '/stability_fir_' type_norm  '_' lower(task) '_' exp tst '_trt1' ]; % Where to store the results
+opt.folder_out = [ root_path '/stability_fir_' type_norm  '_' lower(task) '_' exp tst '_trt2' ]; % Where to store the results
 opt.grid_scales = [5:5:50 60:10:200 220:20:400 500:100:900]; % Search in the range 2-900 clusters
 % use mstep sacle if exist or leave it empty
 mstep_file = [ opt.folder_out filesep 'stability_group/msteps_group.mat'];
