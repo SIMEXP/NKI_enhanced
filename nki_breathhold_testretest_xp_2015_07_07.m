@@ -23,7 +23,7 @@ for ff = 1:length(list_files);
 end
 
 %% Hierarchical clustering
-list_ind = [1:164];
+list_ind = [1:153];
 for ii = 1:length(list_ind)
     % Clustering of subtypes for run1
     fir_td1 = squeeze(fir_all1(:,list_ind(ii),:));
