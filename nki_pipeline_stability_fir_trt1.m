@@ -89,32 +89,32 @@ else
 end
 fprintf ('script to run nki_stability_fir pipeline \n Task: %s \n TR: %s\n normalisation: fir %s\n ',task,exp,type_norm)
 
-%% Setting input/output files 
-%[status,cmdout] = system ('uname -n');
-%server          = strtrim(cmdout);
-%if strfind(server,'lg-1r') % This is guillimin
-%    root_path = '/gs/scratch/yassinebha/NKI_enhanced/';
-%    fprintf ('server: %s (Guillimin) \n ',server)
-%    my_user_name = getenv('USER');
-%elseif strfind(server,'ip05') % this is mammouth
-%    root_path = '/mnt/parallel_scratch_ms2_wipe_on_april_2015/pbellec/benhajal/NKI_enhanced/';
-%    fprintf ('server: %s (Mammouth) \n',server)
-%    my_user_name = getenv('USER');
-%else
-%    switch server
-%        case 'peuplier' % this is peuplier
-%        root_path = '/media/database8/NKI_enhanced/';
-%        fprintf ('server: %s\n',server)
-%        my_user_name = getenv('USER');
-%        
-%        case 'noisetier' % this is noisetier
-%%        root_path = '/media/yassinebha/database2/';
-%%        fprintf ('server: %s\n',server)
-%%        my_user_name = getenv('USER');
-%%    end
-%%end
+% Setting input/output files 
+[status,cmdout] = system ('uname -n');
+server          = strtrim(cmdout);
+if strfind(server,'lg-1r') % This is guillimin
+    root_path = '/gs/scratch/yassinebha/NKI_enhanced/';
+    fprintf ('server: %s (Guillimin) \n ',server)
+    my_user_name = getenv('USER');
+elseif strfind(server,'ip05') % this is mammouth
+    root_path = '/mnt/parallel_scratch_ms2_wipe_on_april_2015/pbellec/benhajal/NKI_enhanced/';
+    fprintf ('server: %s (Mammouth) \n',server)
+    my_user_name = getenv('USER');
+else
+    switch server
+        case 'peuplier' % this is peuplier
+        root_path = '/media/database8/NKI_enhanced/';
+        fprintf ('server: %s\n',server)
+        my_user_name = getenv('USER');
+        
+        case 'noisetier' % this is noisetier
+        root_path = '/media/yassinebha/database2/';
+        fprintf ('server: %s\n',server)
+        my_user_name = getenv('USER');
+    end
+end
   
-root_path = '/media/yassinebha/database2/nki_enhanced/'
+%root_path = '/media/yassinebha/database2/nki_enhanced/'
 
 %% create the csv model files
 opt_model.task = task;
@@ -217,8 +217,8 @@ opt.flag_group = true;  % Generate maps/FIR at the group level
 %% Run the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%
 opt.flag_test = false; % Put this flag to true to just generate the pipeline without running it. Otherwise the pipeline will start.
-%opt.psom.qsub_options = '-q sw -l nodes=1:ppn=4,walltime=05:00:00';
-opt.psom.max_queued = 16;
+opt.psom.qsub_options = '-q sw -l nodes=1:ppn=4,walltime=05:00:00';
+%opt.psom.max_queued = 16;
 pipeline = niak_pipeline_stability_fir(files_in,opt);
 
 %%extra

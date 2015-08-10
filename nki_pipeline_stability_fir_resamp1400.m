@@ -180,7 +180,7 @@ end
 opt.folder_out = [ root_path '/stability_fir_' type_norm  '_' lower(task) '_' exp tst '_resampl1400' ]; % Where to store the results
 opt.grid_scales = [5:5:50 60:10:200 220:20:400 500:100:900]; % Search in the range 2-900 clusters
 % use mstep sacle if exist or leave it empty
-mstep_file = '/gs/scratch/yassinebha/NKI_enhanced/stability_fir_perc_checkerboard_645_noscrub/stability_group/msteps_group.mat';
+mstep_file = '/gs/scratch/yassinebha/NKI_enhanced/stability_fir_perc_checkerboard_1400_noscrub/stability_group/msteps_group.mat';
 if psom_exist(mstep_file)
    warning ('The file %s exist, I will use MSTEP scale',mstep_file);
    load (mstep_file);
